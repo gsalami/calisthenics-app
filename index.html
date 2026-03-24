@@ -39,40 +39,15 @@
     .exercise-name { font-size: 1.4rem; font-weight: bold; margin-bottom: 6px; }
     .exercise-desc { color: #ccc; font-size: 0.85rem; margin-bottom: 14px; line-height: 1.5; }
 
-    /* YouTube embed */
-    .video-wrap {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
+    /* Exercise image */
+    .exercise-img {
+      width: 100%;
       border-radius: 12px;
       margin-bottom: 14px;
-      background: #000;
-    }
-    .video-wrap iframe {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      border: none;
-      border-radius: 12px;
-    }
-    .video-placeholder {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      max-height: 220px;
+      object-fit: cover;
       background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      color: #aaa;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: background 0.2s;
     }
-    .video-placeholder:hover { background: rgba(255,255,255,0.1); }
-    .video-placeholder .play-icon { font-size: 2.5rem; margin-bottom: 6px; }
 
     .timer-row {
       display: flex;
@@ -170,12 +145,7 @@
   <div class="exercise-name" id="exName">Bereit?</div>
   <div class="exercise-desc" id="exDesc">Drücke Start um mit dem Training zu beginnen!</div>
 
-  <div class="video-wrap" id="videoWrap">
-    <div class="video-placeholder" id="videoPlaceholder" onclick="loadVideo()">
-      <div class="play-icon">▶️</div>
-      <div>Video anzeigen</div>
-    </div>
-  </div>
+  <img class="exercise-img" id="exerciseImg" src="images/warmup.jpg" alt="Übung" />
 
   <div class="timer-row">
     <div class="timer-circle" id="timerCircle">
@@ -215,61 +185,61 @@ const exercises = [
     emoji: "🤸", name: "Aufwärmen", duration: 60,
     desc: "Seitliche Ausfallschritte + Arme lockern. Körper wecken!",
     muscles: "🎯 Ganzkörper",
-    videoId: "TOXmdZ35CH0", videoStart: 0
+    img: "images/warmup.jpg"
   },
   {
     emoji: "💪", name: "Push-Ups", duration: 90,
     desc: "Körper gerade, langsam runter, explosiv hoch. Knie auf dem Boden = auch ok!",
     muscles: "🎯 Brust · Schultern · Trizeps",
-    videoId: "TOXmdZ35CH0", videoStart: 219
+    img: "images/pushup.jpg"
   },
   {
     emoji: "🦵", name: "Squats", duration: 90,
     desc: "Füsse hüftbreit, Rücken gerade, Knie nach aussen schieben.",
     muscles: "🎯 Oberschenkel · Gesäss · Waden",
-    videoId: "TOXmdZ35CH0", videoStart: 259
+    img: "images/squat.jpg"
   },
   {
     emoji: "🧘", name: "Side Plank", duration: 60,
     desc: "Unterarmstütz seitlich. Hüfte hochhalten, gerade Linie halten.",
     muscles: "🎯 Core · Seitenbauch · Rücken",
-    videoId: "TOXmdZ35CH0", videoStart: 303
+    img: "images/plank.jpg"
   },
   {
     emoji: "🦿", name: "Lunges", duration: 90,
     desc: "Ausfallschritte abwechselnd links-rechts. Knie knapp über dem Boden.",
     muscles: "🎯 Oberschenkel · Gesäss · Balance",
-    videoId: "vdtKn81CUnI", videoStart: 252
+    img: "images/lunge.jpg"
   },
   {
     emoji: "🏋️", name: "Rückenstrecker", duration: 60,
     desc: "Bauchlage, Arme nach vorne, Brust vom Boden heben und halten.",
     muscles: "🎯 Rücken · Gesäss · Schultern",
-    videoId: "TOXmdZ35CH0", videoStart: 381
+    img: "images/superman.jpg"
   },
   {
     emoji: "⬆️", name: "Quad Hold", duration: 60,
     desc: "Vierfüssler, Knie 1cm vom Boden heben — Core maximal anspannen!",
     muscles: "🎯 Core · Schultern · Balance",
-    videoId: "TOXmdZ35CH0", videoStart: 420
+    img: "images/quadhold.jpg"
   },
   {
     emoji: "🦵", name: "Split Squats", duration: 90,
     desc: "Einbeinige Kniebeugen, Fuss hinten. Gewicht auf das vordere Bein.",
     muscles: "🎯 Oberschenkel · Gesäss · Stabilität",
-    videoId: "vdtKn81CUnI", videoStart: 193
+    img: "images/splitsquat.jpg"
   },
   {
     emoji: "🧘", name: "V-Sit Hold", duration: 60,
     desc: "Sitzen, Beine gestreckt heben, Rücken gerade — Core brennt!",
     muscles: "🎯 Bauch · Hüftbeuger · Core",
-    videoId: "vdtKn81CUnI", videoStart: 337
+    img: "images/vsit.jpg"
   },
   {
     emoji: "🤸", name: "Abkühlen", duration: 60,
     desc: "Sanftes Dehnen und Ausatmen. Gut gemacht — du bist stark! 💪",
     muscles: "🎯 Ganzkörper",
-    videoId: "TOXmdZ35CH0", videoStart: 1129
+    img: "images/cooldown.jpg"
   },
 ];
 
@@ -279,7 +249,6 @@ let totalTime = 0;
 let timer = null;
 let running = false;
 let done = [];
-let videoLoaded = false;
 
 function renderList() {
   const list = document.getElementById('exerciseList');
@@ -300,34 +269,15 @@ function loadExercise(index) {
   document.getElementById('exName').textContent = ex.emoji + ' ' + ex.name;
   document.getElementById('exDesc').textContent = ex.desc;
   document.getElementById('exMuscles').innerHTML = `<b>${ex.muscles}</b>`;
+  document.getElementById('exerciseImg').src = ex.img;
   timeLeft = ex.duration;
   totalTime = ex.duration;
-  videoLoaded = false;
-
-  // Reset video area
-  const wrap = document.getElementById('videoWrap');
-  wrap.innerHTML = `
-    <div class="video-placeholder" id="videoPlaceholder" onclick="loadVideo()">
-      <div class="play-icon">▶️</div>
-      <div>Video zur Übung ansehen</div>
-    </div>
-  `;
 
   updateTimerDisplay();
   updateProgress();
   renderList();
 }
 
-function loadVideo() {
-  const ex = exercises[currentIndex];
-  const wrap = document.getElementById('videoWrap');
-  wrap.innerHTML = `<iframe
-    src="https://www.youtube.com/embed/${ex.videoId}?start=${ex.videoStart}&autoplay=1&rel=0"
-    allow="autoplay; encrypted-media"
-    allowfullscreen>
-  </iframe>`;
-  videoLoaded = true;
-}
 
 function updateTimerDisplay() {
   const min = Math.floor(timeLeft / 60);
