@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💪 Calisthenics Timer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      min-height: 100vh;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin: 20px 0 10px;
+      text-align: center;
+      background: linear-gradient(90deg, #e94560, #0f3460);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: brightness(2);
+    }
+    .subtitle { color: #aaa; margin-bottom: 30px; font-size: 0.9rem; text-align: center; }
+
+    .card {
+      background: rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+    }
+
+    .exercise-emoji { font-size: 4rem; margin-bottom: 10px; }
+    .exercise-name { font-size: 1.6rem; font-weight: bold; margin-bottom: 5px; }
+    .exercise-desc { color: #ccc; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+
+    .timer-circle {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: conic-gradient(#e94560 0deg, rgba(255,255,255,0.1) 0deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      position: relative;
+      transition: background 0.1s;
+    }
+    .timer-inner {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #1a1a2e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .timer-seconds { font-size: 2.5rem; font-weight: bold; color: #e94560; }
+    .timer-label { font-size: 0.7rem; color: #aaa; }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e94560, #f5a623);
+      border-radius: 3px;
+      transition: width 1s linear;
+    }
+
+    .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    button:active { transform: scale(0.95); }
+    .btn-start { background: #e94560; color: white; }
+    .btn-skip { background: rgba(255,255,255,0.15); color: white; }
+    .btn-reset { background: rgba(255,255,255,0.08); color: #aaa; }
+
+    .exercise-list {
+      width: 100%;
+      max-width: 420px;
+    }
+    .ex-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .ex-item.active { border-color: #e94560; background: rgba(233,69,96,0.15); }
+    .ex-item.done { opacity: 0.4; }
+    .ex-emoji { font-size: 1.5rem; }
+    .ex-info { flex: 1; text-align: left; }
+    .ex-title { font-weight: bold; font-size: 0.95rem; }
+    .ex-time { font-size: 0.75rem; color: #aaa; }
+    .ex-check { font-size: 1.2rem; }
+
+    .completion {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+    .completion.show { display: block; }
+    .completion-emoji { font-size: 5rem; }
+    .completion h2 { font-size: 1.8rem; margin: 10px 0; color: #f5a623; }
+  </style>
+</head>
+<body>
+
+<h1>💪 Calisthenics App</h1>
+<p class="subtitle">Max. 1:30 pro Übung · Kein Equipment nötig</p>
+
+<div class="card" id="mainCard">
+  <div class="exercise-emoji" id="exEmoji">🏃</div>
+  <div class="exercise-name" id="exName">Bereit?</div>
+  <div class="exercise-desc" id="exDesc">Drücke Start um mit dem Training zu beginnen!</div>
+
+  <div class="timer-circle" id="timerCircle">
+    <div class="timer-inner">
+      <div class="timer-seconds" id="timerDisplay">1:30</div>
+      <div class="timer-label">verbleibend</div>
+    </div>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:100%"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-start" id="btnStart" onclick="toggleTimer()">▶ Start</button>
+    <button class="btn-skip" onclick="nextExercise()">⏭ Weiter</button>
+    <button class="btn-reset" onclick="resetAll()">↺ Reset</button>
+  </div>
+</div>
+
+<div class="completion" id="completion">
+  <div class="completion-emoji">🏆</div>
+  <h2>Geschafft!</h2>
+  <p style="color:#ccc; margin-bottom:20px">Super Training! Du bist stark 💪</p>
+  <button class="btn-start" onclick="resetAll()">↺ Nochmal</button>
+</div>
+
+<div class="exercise-list" id="exerciseList"></div>
+
+<script>
+const exercises = [
+  { emoji: "🤸", name: "Aufwärmen", desc: "Lockeres Hüpfen + Arme kreisen. Locker bleiben, Körper wecken.", duration: 60 },
+  { emoji: "💪", name: "Push-Ups", desc: "Liegestütze. Körper gerade halten, langsam nach unten und explosiv hoch.", duration: 90 },
+  { emoji: "🦵", name: "Squats", desc: "Kniebeugen. Füsse schulterbreit, Rücken gerade, Knie über die Zehen.", duration: 90 },
+  { emoji: "🧘", name: "Plank", desc: "Unterarmstütz halten. Bauch anspannen, Gesäss nicht hochziehen.", duration: 60 },
+  { emoji: "🦘", name: "Burpees", desc: "Von stehend in Liegestütz, wieder hoch und springen. Das volle Paket!", duration: 90 },
+  { emoji: "🦿", name: "Lunges", desc: "Ausfallschritte. Abwechselnd links-rechts, Knie knapp über dem Boden.", duration: 90 },
+  { emoji: "⬆️", name: "Mountain Climbers", desc: "Im Stütz die Knie abwechselnd zur Brust ziehen — so schnell wie möglich!", duration: 90 },
+  { emoji: "🧗", name: "Dips (Stuhl)", desc: "Hände auf Stuhlkante, Körper senken und hochdrücken. Trizeps brennt!", duration: 60 },
+  { emoji: "🏋️", name: "Superman", desc: "Bauchlage, Arme und Beine gleichzeitig heben und halten. Rücken stärken.", duration: 60 },
+  { emoji: "🎯", name: "Hollow Body Hold", desc: "Rückenlage, Beine leicht heben, Arme gestreckt — Körperspannung halten.", duration: 60 },
+];
+
+let currentIndex = 0;
+let timeLeft = 0;
+let totalTime = 0;
+let timer = null;
+let running = false;
+let done = [];
+
+function renderList() {
+  const list = document.getElementById('exerciseList');
+  list.innerHTML = exercises.map((ex, i) => `
+    <div class="ex-item ${i === currentIndex ? 'active' : ''} ${done.includes(i) ? 'done' : ''}" onclick="jumpTo(${i})">
+      <div class="ex-emoji">${ex.emoji}</div>
+      <div class="ex-info">
+        <div class="ex-title">${ex.name}</div>
+        <div class="ex-time">⏱ ${ex.duration >= 60 ? Math.floor(ex.duration/60)+':'+(ex.duration%60||'00') : ex.duration+'s'}</div>
+      </div>
+      <div class="ex-check">${done.includes(i) ? '✅' : i === currentIndex ? '▶️' : '○'}</div>
+    </div>
+  `).join('');
+}
+
+function loadExercise(index) {
+  const ex = exercises[index];
+  document.getElementById('exEmoji').textContent = ex.emoji;
+  document.getElementById('exName').textContent = ex.name;
+  document.getElementById('exDesc').textContent = ex.desc;
+  timeLeft = ex.duration;
+  totalTime = ex.duration;
+  updateTimerDisplay();
+  updateProgress();
+  renderList();
+}
+
+function updateTimerDisplay() {
+  const min = Math.floor(timeLeft / 60);
+  const sec = timeLeft % 60;
+  document.getElementById('timerDisplay').textContent = `${min}:${sec.toString().padStart(2,'0')}`;
+  const deg = ((totalTime - timeLeft) / totalTime) * 360;
+  document.getElementById('timerCircle').style.background =
+    `conic-gradient(#e94560 ${deg}deg, rgba(255,255,255,0.1) ${deg}deg)`;
+}
+
+function updateProgress() {
+  const pct = (timeLeft / totalTime) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function toggleTimer() {
+  if (running) {
+    clearInterval(timer);
+    running = false;
+    document.getElementById('btnStart').textContent = '▶ Weiter';
+  } else {
+    running = true;
+    document.getElementById('btnStart').textContent = '⏸ Pause';
+    timer = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      updateProgress();
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        running = false;
+        done.push(currentIndex);
+        setTimeout(() => nextExercise(), 800);
+      }
+    }, 1000);
+  }
+}
+
+function nextExercise() {
+  clearInterval(timer);
+  running = false;
+  if (!done.includes(currentIndex)) done.push(currentIndex);
+  currentIndex++;
+  if (currentIndex >= exercises.length) {
+    document.getElementById('mainCard').style.display = 'none';
+    document.getElementById('completion').classList.add('show');
+    renderList();
+    return;
+  }
+  document.getElementById('btnStart').textContent = '▶ Start';
+  loadExercise(currentIndex);
+}
+
+function jumpTo(index) {
+  clearInterval(timer);
+  running = false;
+  currentIndex = index;
+  document.getElementById('btnStart').textContent = '▶ Start';
+  loadExercise(index);
+}
+
+function resetAll() {
+  clearInterval(timer);
+  running = false;
+  currentIndex = 0;
+  done = [];
+  document.getElementById('mainCard').style.display = 'block';
+  document.getElementById('completion').classList.remove('show');
+  document.getElementById('btnStart').textContent = '▶ Start';
+  loadExercise(0);
+}
+
+loadExercise(0);
+</script>
+</body>
+</html>
